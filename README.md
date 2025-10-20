@@ -80,21 +80,71 @@ need to repeat them after making code changes to test the new functionality.
 ## Adding Addresses to Contacts
 
 The main objective of this exercise is to extend the existing application to
-support addresses for contacts. You will need to create a new `Address` entity
+support addresses for contacts.  Each contact can have multiple addresses, and each
+address is associated with a single contact.  This is a one-to-many relationship
+between the `Contact` and `Address` entities.
+
+### Creating the Address Entity and Establishing Relationships
+
+You will need to create a new `Address` entity
 class that has the following fields: `id`, `street`, `city`, `state`, and
-`zipCode`. You will also need to establish a one-to-many relationship between
-the `Contact` and `Address` entities, where a contact can have multiple
-addresses.
+`zipCode` and `contact` (of type `Contact`.)  The `id` field should be annotated
+as the primary key and set to auto-generate its value.
 
-To accomplish this, you will need to:
+The `contact` field should be annotated to establish a many-to-one relationship
+with the `Contact` entity.  It is **very** important that you also annotate 
+this field with `@JsonIgnore` to prevent infinite recursion during JSON 
+serialization.
 
-1. Create the `Address` entity class with the specified fields and appropriate
-   JPA annotations.
-2. Update the `Contact` entity class to include a `List` of `Address`
-   entities and the necessary JPA annotations to establish the one-to-many
-   relationship with cascading operations.
+### Updating the Contact Entity
 
-## Adding New Endpoints for Address Management
+Next, you will need to update the `Contact` entity class to include a new property
+call `addresses` that is a `List` of `Address` entities.  Add getter and setter
+methods for this property.  You will need to annotate this property to establish a
+one-to-many relationship with the `Address` entity.  Be sure to set the cascade type to
+`CascadeType.ALL` to ensure that when a contact is saved, its associated addresses 
+are also saved.
+
+### Verifying the new Entity and Relationship
+
+At this point, you should verify that the new `Address` entity and the relationship
+between `Contact` and `Address` are set up correctly. 
+
+1. Clear the database by dropping the `orm-exercise` schema and recreating it.
+2. Relaunch the application to allow JPA to create the necessary tables in the
+   database.
+3. Use Postman to create a new contact with multiple addresses by sending a POST
+   request to `http://localhost:8080/contacts` with a JSON body that includes
+   an array of addresses.  For example:
+
+   ```json
+    {
+        "name": "John Doe",
+        "email": "jdoe@example.com",
+        "addresses": [
+            {
+                "street": "123 Main St",
+                "city": "Anytown",
+                "state": "CA",
+                "zipCode": "12345"
+            },
+            {
+                "street": "456 Oak St",
+                "city": "Othertown",
+                "state": "TX",
+                "zipCode": "67890"
+            }
+        ]
+    }
+   ```
+4. Verify in MySQL Workbench that the `contacts` and `addresses` tables have been
+   created correctly and that the addresses are associated with the correct
+   contact.
+5. Retrieve the contact using a GET request to
+   `http://localhost:8080/contacts/{id}` and verify that the addresses are
+   included in the response.
+
+## BONUS: Adding New Endpoints for Address Management
 
 Next, you will add two new endpoints to the `ContactController` class to manage
 addresses for contacts:
@@ -109,15 +159,11 @@ its ID, then find the address by its ID (for deletion), add or remove the
 address from the contact's list of addresses, and finally save the updated
 contact entity back to the database.
 
-## Testing the New Functionality
+### Testing the New Functionality
 
 1. Launch the application again after making the necessary code changes.
-2. Ensure that the existing CRUD operations for contacts still function
-   correctly after adding the address functionality.  Note that for testing
-   add/update, you will need to send JSON bodies that include an array of
-   addresses for the contact.
-3. Test the new functionality using Postman to ensure that you can add,
-   retrieve, update, and delete addresses for contacts.
+2. Test the new functionality using Postman to ensure that you can add,
+   and delete addresses for a contact using the new endpoints.
 
 ## Conclusion
 
